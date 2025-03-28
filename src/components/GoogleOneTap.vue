@@ -24,7 +24,7 @@ function handleCredentialResponse(response: any) {
   try {
     const credential = response.credential;
     const decodedUser = jwtDecode<GoogleUser>(credential);
-    
+
     emit('success', decodedUser);
   } catch (error) {
     emit('error', error as Error);
@@ -33,34 +33,36 @@ function handleCredentialResponse(response: any) {
 
 function loadGoogleScript() {
   if (scriptLoaded.value) return;
-  
+
   const script = document.createElement('script');
   script.src = 'https://accounts.google.com/gsi/client';
   script.async = true;
   script.defer = true;
-  
+
   script.onload = () => {
     scriptLoaded.value = true;
     initGoogleOneTap();
   };
-  
+
   script.onerror = (error) => {
     emit('error', new Error('Failed to load Google One Tap script'));
   };
-  
+
   document.head.appendChild(script);
 }
 
 function initGoogleOneTap() {
   if (!window.google || !scriptLoaded.value) return;
-  
+
   window.google.accounts.id.initialize({
     client_id: props.clientId,
     callback: handleCredentialResponse,
     auto_select: true,
-    cancel_on_tap_outside: false
+    cancel_on_tap_outside: false,
+    itp_support: true,
+    use_fedcm_for_prompt: true // Explicitly opt in to FedCM
   });
-  
+
   // Only render the button if showButton is true
   if (props.showButton) {
     window.google.accounts.id.renderButton(
@@ -68,7 +70,7 @@ function initGoogleOneTap() {
       { theme: 'outline', size: 'large' }
     );
   }
-  
+
   // Always prompt the One Tap UI
   window.google.accounts.id.prompt();
 }
@@ -82,4 +84,4 @@ onMounted(() => {
 #google-one-tap-container {
   margin: 20px 0;
 }
-</style> 
+</style>
