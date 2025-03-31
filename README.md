@@ -192,3 +192,8 @@ Google One Tap is supported in most modern browsers. For optimal user experience
 
 - [Vue.js](https://vuejs.org/)
 - [Google Identity Services](https://developers.google.com/identity)
+
+
+## TO DO:
+Stop loop after logout - dead-loop UX
+Customizations

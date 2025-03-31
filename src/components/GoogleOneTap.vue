@@ -57,7 +57,7 @@ function initGoogleOneTap() {
   window.google.accounts.id.initialize({
     client_id: props.clientId,
     callback: handleCredentialResponse,
-    auto_select: true,
+    // auto_select: true,
     cancel_on_tap_outside: false,
     itp_support: true,
     use_fedcm_for_prompt: true // Explicitly opt in to FedCM

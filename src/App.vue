@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import HelloWorld from './components/HelloWorld.vue';
 import Banner from './components/Banner.vue';
 import GoogleOneTap from './components/GoogleOneTap.vue';
@@ -13,6 +13,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const isAuthenticated = computed(() => authStore.state.isAuthenticated);
 const user = computed(() => authStore.state.user);
+const isHomePage = ref(true); // Track if we're on the homepage
 
 const handleLoginSuccess = (googleUser: GoogleUser) => {
   authStore.login(googleUser);
@@ -22,8 +23,17 @@ const handleLoginError = (error: Error) => {
   console.error('Google One Tap login error:', error);
 };
 
+// Check if current path is homepage
+const checkIsHomePage = () => {
+  isHomePage.value = window.location.pathname === '/' || window.location.pathname === '/index.html';
+};
+
 onMounted(() => {
   authStore.initAuth();
+  checkIsHomePage();
+  
+  // Add event listener for route changes (if using history API)
+  window.addEventListener('popstate', checkIsHomePage);
 });
 </script>
 
@@ -34,7 +44,7 @@ onMounted(() => {
     <div class="auth-container">
       <UserProfile v-if="isAuthenticated && user" :user="user" />
       <GoogleOneTap 
-        v-else 
+        v-else-if="isHomePage" 
         :client-id="GOOGLE_CLIENT_ID" 
         :showButton="false"
         @success="handleLoginSuccess" 
