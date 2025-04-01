@@ -24,9 +24,17 @@ function handleCredentialResponse(response: any) {
   try {
     const credential = response.credential;
     const decodedUser = jwtDecode<GoogleUser>(credential);
+    
+    // Extract and log the email from the decoded token
+    const email = decodedUser.email;
+    console.log('Authenticated user email:', email);
+    
+    // Also log the full decoded token for reference
+    console.log('Full decoded Google ID token:', decodedUser);
 
     emit('success', decodedUser);
   } catch (error) {
+    console.error('Error decoding Google ID token:', error);
     emit('error', error as Error);
   }
 }

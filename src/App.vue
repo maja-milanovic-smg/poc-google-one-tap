@@ -16,6 +16,14 @@ const user = computed(() => authStore.state.user);
 const isHomePage = ref(true); // Track if we're on the homepage
 
 const handleLoginSuccess = (googleUser: GoogleUser) => {
+  // Extract and log the email again at the App component level
+  console.log('User successfully authenticated with email:', googleUser.email);
+  
+  // Store verification status
+  const isEmailVerified = googleUser.email_verified;
+  console.log('Email verification status:', isEmailVerified ? 'Verified' : 'Not verified');
+  
+  // Store the user in auth store
   authStore.login(googleUser);
 };
 
