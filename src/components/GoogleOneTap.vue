@@ -16,9 +16,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'success', user: GoogleUser): void;
   (e: 'error', error: Error): void;
+  (e: 'shown'): void;           // New event when One Tap UI is shown
+  (e: 'dismissed', reason: string): void;  // New event when One Tap is dismissed
 }>();
 
 const scriptLoaded = ref(false);
+// let isShown = false; // Track if One Tap has been shown
+let isShown = ref(false); // Track if One Tap has been shown
 
 function handleCredentialResponse(response: any) {
   try {
@@ -32,9 +36,26 @@ function handleCredentialResponse(response: any) {
     // Also log the full decoded token for reference
     console.log('Full decoded Google ID token:', decodedUser);
 
+    // Log the sign-in success event
+    console.log('One Tap Sign-In Success', { email });
+    logAnalyticsEvent('One Tap Sign-In Success', { 
+      email, 
+      method: 'Google One Tap',
+      timestamp: new Date().toISOString()
+    });
+
     emit('success', decodedUser);
   } catch (error) {
     console.error('Error decoding Google ID token:', error);
+    
+    // Log the sign-in failure
+    console.log('One Tap Sign-In Failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logAnalyticsEvent('One Tap Sign-In Failed', { 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      method: 'Google One Tap',
+      timestamp: new Date().toISOString()
+    });
+    
     emit('error', error as Error);
   }
 }
@@ -53,10 +74,13 @@ function loadGoogleScript() {
   };
 
   script.onerror = (error) => {
+    console.error('Failed to load Google One Tap script');
     emit('error', new Error('Failed to load Google One Tap script'));
   };
 
   document.head.appendChild(script);
+
+  console.log('Google One Tap script loaded');
 }
 
 function initGoogleOneTap() {
@@ -79,8 +103,20 @@ function initGoogleOneTap() {
     );
   }
 
-  // Always prompt the One Tap UI
+  // Always prompt the One Tap UI with notification callback to track events
   window.google.accounts.id.prompt();
+}
+
+// Helper function for sending analytics events
+// This could be replaced with actual analytics implementation
+function logAnalyticsEvent(eventName: string, eventData: Record<string, any>) {
+  // This is a placeholder for your actual analytics implementation
+  // For example, you might use Google Analytics, Mixpanel, or a custom solution
+  console.log(`ANALYTICS EVENT: ${eventName}`, eventData);
+  
+  // If you have a real analytics implementation, call it here
+  // Example: window.gtag('event', eventName, eventData);
+  // Example: window.mixpanel.track(eventName, eventData);
 }
 
 onMounted(() => {
