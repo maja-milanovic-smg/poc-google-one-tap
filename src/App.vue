@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import HelloWorld from './components/HelloWorld.vue';
 import Banner from './components/Banner.vue';
 import GoogleOneTap from './components/GoogleOneTap.vue';
@@ -13,8 +13,17 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const isAuthenticated = computed(() => authStore.state.isAuthenticated);
 const user = computed(() => authStore.state.user);
+const isHomePage = ref(true); // Track if we're on the homepage
 
 const handleLoginSuccess = (googleUser: GoogleUser) => {
+  // Extract and log the email again at the App component level
+  console.log('User successfully authenticated with email:', googleUser.email);
+  
+  // Store verification status
+  const isEmailVerified = googleUser.email_verified;
+  console.log('Email verification status:', isEmailVerified ? 'Verified' : 'Not verified');
+  
+  // Store the user in auth store
   authStore.login(googleUser);
 };
 
@@ -22,8 +31,28 @@ const handleLoginError = (error: Error) => {
   console.error('Google One Tap login error:', error);
 };
 
+// New handlers for One Tap events
+const handleOneTapShown = () => {
+  console.log('App received event: One Tap UI shown to user');
+  // You could trigger app-level changes here, like dimming the background
+};
+
+const handleOneTapDismissed = (reason: string) => {
+  console.log('App received event: One Tap dismissed', { reason });
+  // You could handle the dismissal appropriately, maybe show a different UI
+};
+
+// Check if current path is homepage
+const checkIsHomePage = () => {
+  isHomePage.value = window.location.pathname === '/' || window.location.pathname === '/index.html';
+};
+
 onMounted(() => {
   authStore.initAuth();
+  checkIsHomePage();
+  
+  // Add event listener for route changes (if using history API)
+  window.addEventListener('popstate', checkIsHomePage);
 });
 </script>
 
@@ -34,24 +63,16 @@ onMounted(() => {
     <div class="auth-container">
       <UserProfile v-if="isAuthenticated && user" :user="user" />
       <GoogleOneTap 
-        v-else 
+        v-else-if="isHomePage" 
         :client-id="GOOGLE_CLIENT_ID" 
         :showButton="false"
         @success="handleLoginSuccess" 
-        @error="handleLoginError" 
+        @error="handleLoginError"
+        @shown="handleOneTapShown"
+        @dismissed="handleOneTapDismissed"
       />
     </div>
 
-    <div class="logo-container">
-      <a href="https://vite.dev" target="_blank">
-        <img src="/vite.svg" class="logo" alt="Vite logo" />
-      </a>
-      <a href="https://vuejs.org/" target="_blank">
-        <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-      </a>
-    </div>
-
-    <HelloWorld msg="Vite + Vue" />
   </div>
 </template>
 
